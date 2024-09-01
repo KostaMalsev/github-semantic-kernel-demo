@@ -13,13 +13,29 @@ from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from semantic_kernel.connectors.ai.open_ai.prompt_execution_settings.open_ai_prompt_execution_settings import (
     OpenAIChatPromptExecutionSettings,
 )
+
+#for auto selecting the functions:
+from semantic_kernel.connectors.ai.chat_completion_client_base import ChatCompletionClientBase
+from semantic_kernel.connectors.ai.function_call_behavior import FunctionCallBehavior
+from semantic_kernel.connectors.ai.open_ai.prompt_execution_settings.azure_chat_prompt_execution_settings import (
+    AzureChatPromptExecutionSettings,
+)
+from semantic_kernel.contents.chat_history import ChatHistory
+from semantic_kernel.functions.kernel_arguments import KernelArguments
+
+
+
 from semantic_kernel.functions.kernel_function_decorator import kernel_function
 from semantic_kernel.kernel import Kernel
 
-from fetchurl import fetch_text_content_from_url
+from gitapi import github_get
+from gitapi import github_push
+from gitapi import github_get_actions_results
 
-# Load environment variables from .env file
-load_dotenv()
+
+
+
+
 
 app = FastAPI()
 
@@ -35,23 +51,6 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-
-class PromptRequest(BaseModel):
-    prompt: str
-
-#Definition of the custom fetch plugin:
-class FetchPlugin:
-    """Plugin provides fetch of content from url."""
-
-    @kernel_function(name="get_content_from_url", description="Get the content from url")
-    def get_content_from_url(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
-        return fetch_text_content_from_url(url)
-
-
-# Global variable to store the kernel
-kernel = None
-
-
 # Read the secret from a secret file which were injected by docker-compose
 def read_secret(secret_name):
     try:
@@ -59,6 +58,50 @@ def read_secret(secret_name):
             return secret_file.read().strip()
     except IOError:
         return None
+
+class PromptRequest(BaseModel):
+    prompt: str
+
+
+
+
+#Definition of the custom fetch plugin:
+class GithubPlugin:
+    """Plugin provides github api """
+
+    @kernel_function(name="github_pushf", description="Push file from github repo")
+    def github_pushf(self, 
+                        repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                        file_path: Annotated[str, "file path"],
+                        file_content: Annotated[str, "full fixed file content"],
+                    ) -> Annotated[str, "The output is a string"]:
+        print(os.getenv('GITHUB_TOKEN_GEN_AI'))
+        return github_push(repo_owner,repo_name,file_path,"Gen AI fix",file_content,os.getenv('GITHUB_TOKEN_GEN_AI'))
+
+    
+    @kernel_function(name="github_getf", description="Get file from github repo")
+    def github_getf(self, 
+                        repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                        file_path: Annotated[str, "file path"],
+                    ) -> Annotated[str, "The output is a string"]:
+        
+        return github_get(repo_owner,repo_name,file_path,"main",os.getenv('GITHUB_TOKEN_GEN_AI'))
+    
+    
+    @kernel_function(name="github_get_actions_resultsf", description="Get github actions results")
+    def github_get_actions_resultsf(self, 
+                        repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                    ) -> Annotated[str, "The output is a string"]:
+        return github_get_actions_results(repo_owner,repo_name,os.getenv('GITHUB_TOKEN_GEN_AI'))
+
+
+
+
+# Global variable to store the kernel
+kernel = None
 
 
 
@@ -87,33 +130,48 @@ async def setup_kernel():
     )
     
     kernel.add_service(ai_service)
-    kernel.add_plugin(FetchPlugin(), plugin_name="fetchurl")
+    kernel.add_plugin(GithubPlugin(), plugin_name="githubapi")
 
     return kernel
+
+
+
 
 
 @app.on_event("startup")
 async def startup_event():
     global kernel
+    # Load environment variables from .env file
+    load_dotenv()
+
     kernel = await setup_kernel()
 
 
 #Endpoint for chat prompts:
 @app.post("/demoprompt")
 async def demo_prompt(request: PromptRequest):
-    settings: OpenAIChatPromptExecutionSettings = kernel.get_prompt_execution_settings_from_service_id(
-        service_id="function_calling"
-    )
-    settings.function_choice_behavior = FunctionChoiceBehavior.Auto(filters={"included_plugins": ["fetchurl"]})
 
-    result = await kernel.invoke_prompt(
-        function_name="get_content_from_url",
-        plugin_name="fetchurl",
-        prompt=request.prompt,
-        settings=settings,
-    )
-    
+    chat_completion : AzureChatCompletion = kernel.get_service(type=ChatCompletionClientBase)
+
+    history = ChatHistory()
+    history.add_user_message(request.prompt)
+
+    # Enable automatic function calling
+    execution_settings = AzureChatPromptExecutionSettings(tool_choice="auto")
+    execution_settings.function_call_behavior = FunctionCallBehavior.EnableFunctions(auto_invoke=True, filters={})
+
+    result = (await chat_completion.get_chat_message_contents(
+            chat_history=history,
+            settings=execution_settings,
+            kernel=kernel,
+            arguments=KernelArguments(),
+        ))[0]
+   
+    # Add the message from the agent to the chat history
+    history.add_message(result)
+
     return {"response": str(result)}
+
 
 
 
