@@ -1,2 +1,5 @@
-
-
+semantic-kernel==1.8.0
+fastapi==0.112.1
+fastapi-cors==0.0.6
+uvicorn==0.30.6
+bs4==0.0.2
