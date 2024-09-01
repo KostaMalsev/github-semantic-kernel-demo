@@ -1,2 +1,16 @@
+services:
+  chatserver:
+    image: chatserver:latest
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      - GLOBAL_LLM_SERVICE=AzureOpenAI
+      - AZURE_OPENAI_ENDPOINT=https://ai-kostyamalsevai4154623923737068.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview
+      - AZURE_OPENAI_CHAT_DEPLOYMENT_NAME=gpt-4o
+    ports:
+     - "8000:8000"
+    secrets:
+      - AZURE_OPENAI_API_KEY
 
-
+secrets:
+    AZURE_OPENAI_API_KEY:
+      file: ./api-key.txt
