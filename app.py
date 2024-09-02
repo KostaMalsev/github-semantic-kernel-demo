@@ -32,6 +32,7 @@ from gitapi import github_get
 from gitapi import github_push
 from gitapi import github_get_actions_results
 
+from fetchurl import get_content_from_url
 
 
 
@@ -97,6 +98,11 @@ class GithubPlugin:
                         repo_name: Annotated[str, "repository name"],
                     ) -> Annotated[str, "The output is a string"]:
         return github_get_actions_results(repo_owner,repo_name,os.getenv('GITHUB_TOKEN_GEN_AI'))
+    
+
+    @kernel_function(name="get_content_from_urlf", description="Get github actions results")
+    def get_content_from_urlf(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
+        return get_content_from_url(url)
 
 
 
