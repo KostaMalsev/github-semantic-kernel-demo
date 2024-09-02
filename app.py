@@ -1,7 +1,7 @@
 import os
+import datetime
 from typing import Annotated
 from dotenv import load_dotenv
-import asyncio
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -76,8 +76,9 @@ class GithubPlugin:
                         file_path: Annotated[str, "file path"],
                         file_content: Annotated[str, "full fixed file content"],
                     ) -> Annotated[str, "The output is a string"]:
-        print(os.getenv('GITHUB_TOKEN_GEN_AI'))
-        return github_push(repo_owner,repo_name,file_path,"Gen AI fix",file_content,os.getenv('GITHUB_TOKEN_GEN_AI'))
+        #comment  = print(f"AI generated on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        comment  = f"AI generated on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        return github_push(repo_owner,repo_name,file_path,comment,file_content,os.getenv('GITHUB_TOKEN_GEN_AI'))
 
     
     @kernel_function(name="github_getf", description="Get file from github repo")
