@@ -98,6 +98,57 @@ def github_get(repo_owner, repo_name, file_path, branch, github_token):
         return None
 
 
+
+
+
+def github_get_actions_results(owner, repo, github_token):
+    
+    # Get list of artifacts
+    artifacts_url = f"https://api.github.com/repos/{owner}/{repo}/actions/artifacts"
+    headers = {
+        "Authorization": f"Bearer {github_token}",
+        "Content-Type": "application/vnd.github+json",
+        'Accept': 'application/vnd.github+json'
+    }
+    response = requests.get(artifacts_url, headers=headers)
+    response.raise_for_status()
+    
+    artifacts = response.json()["artifacts"]
+    #print(artifacts)
+
+    artifact_name = "SummaryResult"
+    
+    # Find the "Kosta" artifact
+    summary_artifact = next((a for a in artifacts if a["name"] == artifact_name), None)
+    
+    if not summary_artifact:
+        print(f"No artifact named '{artifact_name}' found.")
+        return None
+    
+    # Download the artifact
+    download_url = summary_artifact["archive_download_url"]
+    response = requests.get(download_url, headers=headers)
+    response.raise_for_status()
+    
+    # Extract the zip file
+    z = zipfile.ZipFile(io.BytesIO(response.content))
+    z.extractall("temp_artifact")
+    
+    # Read the content of summary.md
+    with open("temp_artifact/summary.md", "r") as f:
+        content = f.read()
+    
+    # Clean up the temporary directory
+    os.remove("temp_artifact/summary.md")
+    os.rmdir("temp_artifact")
+    
+    return content
+    
+
+
+
+
+
 '''
 def github_get_actions_results(owner, repo, github_token):
     """
@@ -139,60 +190,3 @@ def github_get_actions_results(owner, repo, github_token):
 
     return results
 '''
-
-
-def github_get_actions_results(owner, repo, github_token):
-    
-    # Get list of artifacts
-    artifacts_url = f"https://api.github.com/repos/{owner}/{repo}/actions/artifacts"
-    headers = {
-        "Authorization": f"Bearer {github_token}",
-        "Content-Type": "application/vnd.github+json",
-        'Accept': 'application/vnd.github+json'
-    }
-    response = requests.get(artifacts_url, headers=headers)
-    response.raise_for_status()
-    
-    artifacts = response.json()["artifacts"]
-    #print(artifacts)
-
-    artifact_name = "Kosta" #@@
-    
-    # Find the "Kosta" artifact
-    kosta_artifact = next((a for a in artifacts if a["name"] == artifact_name), None)
-    
-    if not kosta_artifact:
-        print(f"No artifact named '{artifact_name}' found.")
-        return None
-    
-    # Download the artifact
-    download_url = kosta_artifact["archive_download_url"]
-    response = requests.get(download_url, headers=headers)
-    response.raise_for_status()
-    
-    # Extract the zip file
-    z = zipfile.ZipFile(io.BytesIO(response.content))
-    z.extractall("temp_artifact")
-    
-    # Read the content of summary.md
-    with open("temp_artifact/summary.md", "r") as f:
-        content = f.read()
-    
-    # Clean up the temporary directory
-    os.remove("temp_artifact/summary.md")
-    os.rmdir("temp_artifact")
-    
-    return content
-    
-    '''
-    return {
-        'id': latest_run['id'],
-        'name': latest_run['name'],
-        'status': latest_run['status'],
-        'conclusion': latest_run['conclusion'],
-        'branch': latest_run['head_branch'],
-        'commit_message': latest_run['head_commit']['message'] if latest_run['head_commit'] else 'N/A',
-        'html_url': latest_run['html_url']
-    }
-    '''
-

@@ -1,6 +1,6 @@
 import os
 import datetime
-from typing import Annotated
+from typing import Annotated,List
 from dotenv import load_dotenv
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -63,7 +63,8 @@ def read_secret(secret_name):
 class PromptRequest(BaseModel):
     prompt: str
 
-
+class Conversation(BaseModel):
+    history: List[dict] = []
 
 
 #Definition of the custom fetch plugin:
@@ -100,8 +101,8 @@ class GithubPlugin:
         return github_get_actions_results(repo_owner,repo_name,os.getenv('GITHUB_TOKEN_GEN_AI'))
     
 
-    @kernel_function(name="get_content_from_urlf", description="Get github actions results")
-    def get_content_from_urlf(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
+    @kernel_function(name="github_get_content_from_urlf", description="Get github actions results")
+    def github_get_content_from_urlf(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
         return get_content_from_url(url)
 
 
@@ -109,6 +110,7 @@ class GithubPlugin:
 
 # Global variable to store the kernel
 kernel = None
+conversations = {}
 
 
 
@@ -142,7 +144,10 @@ async def setup_kernel():
     return kernel
 
 
-
+def get_or_create_conversation(conversation_id: str):
+    if conversation_id not in conversations:
+        conversations[conversation_id] = Conversation()
+    return conversations[conversation_id]
 
 
 @app.on_event("startup")
@@ -155,12 +160,25 @@ async def startup_event():
 
 
 #Endpoint for chat prompts:
-@app.post("/demoprompt")
-async def demo_prompt(request: PromptRequest):
+#@app.post("/demoprompt")
+@app.post("/demoprompt/{conversation_id}")
+
+async def demo_prompt(conversation_id: str, request: PromptRequest):
+
+    print(conversation_id) 
 
     chat_completion : AzureChatCompletion = kernel.get_service(type=ChatCompletionClientBase)
 
+    conversation = get_or_create_conversation(conversation_id)
+
     history = ChatHistory()
+
+    for message in conversation.history:
+        if message['role'] == 'user':
+            history.add_user_message(message['content'])
+        elif message['role'] == 'assistant':
+            history.add_assistant_message(message['content'])
+
     history.add_user_message(request.prompt)
 
     # Enable automatic function calling
@@ -175,7 +193,9 @@ async def demo_prompt(request: PromptRequest):
         ))[0]
    
     # Add the message from the agent to the chat history
-    history.add_message(result)
+    conversation.history.append({"role": "user", "content": request.prompt})
+    conversation.history.append({"role": "assistant", "content": str(result)})
+    #history.add_message(result)
 
     return {"response": str(result)}
 

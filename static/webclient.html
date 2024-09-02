@@ -80,21 +80,35 @@
 
     <script>
 
+        function generateUniqueId() {
+            const timestamp = Date.now();
+            const randomNumber = Math.random();
+            const randomString = randomNumber.toString(36).substr(2, 9);
+            return `${timestamp}-${randomString}`;
+}
+
         const sendButton = document.getElementById("send-button");
-            const promptInput = document.getElementById("prompt-input");
-            const responseText = document.getElementById("response-text");
+        const promptInput = document.getElementById("prompt-input");
+        const responseText = document.getElementById("response-text");
+        
+        // Generate a conversation ID when the page loads
+        const conversationId = generateUniqueId();
+        
         //Set the send button:
         sendButton.addEventListener('click', sendPrompt);
 
         
         async function sendPrompt() {
+
             const prompt = promptInput.value.trim();
             if (!prompt) return;
 
             responseText.innerHTML = 'Thinking...';
 
             try {
-                const response = await fetch('http://localhost:8000/demoprompt', {
+                //const response = await fetch('http://localhost:8000/demoprompt', {
+                const response = await fetch(`http://localhost:8000/demoprompt/${conversationId}`, {
+
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
