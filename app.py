@@ -28,9 +28,13 @@ from semantic_kernel.functions.kernel_arguments import KernelArguments
 from semantic_kernel.functions.kernel_function_decorator import kernel_function
 from semantic_kernel.kernel import Kernel
 
-from gitapi import github_get
-from gitapi import github_push
-from gitapi import github_get_actions_results
+from gitapi import (github_get,
+                    github_push,
+                    get_readme_from_github,
+                    github_get_actions_results,
+                    update_readme_on_github,
+                    create_readme_file
+                    )
 
 from fetchurl import get_content_from_url
 
@@ -78,7 +82,6 @@ class GithubPlugin:
                         file_path: Annotated[str, "file path"],
                         file_content: Annotated[str, "full fixed file content"],
                     ) -> Annotated[str, "The output is a string"]:
-        #comment  = print(f"AI generated on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         comment  = f"AI generated on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         return github_push(repo_owner,repo_name,file_path,comment,file_content,os.getenv('GITHUB_TOKEN_GEN_AI'))
 
@@ -101,16 +104,52 @@ class GithubPlugin:
         return github_get_actions_results(repo_owner,repo_name,os.getenv('GITHUB_TOKEN_GEN_AI'))
     
 
-    @kernel_function(name="github_get_content_from_urlf", description="Get github actions results")
+    @kernel_function(name="github_get_content_from_urlf", description="Get all kind of content from url")
     def github_get_content_from_urlf(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
         return get_content_from_url(url)
+    
+    
+    @kernel_function(name="get_readme_from_githubf", description="Get existing Readme from repo, use only for Readme files")
+    def get_readme_from_githubf(self, 
+                       repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                    ) -> Annotated[str, "The output is a string"]:
+            
+            return get_readme_from_github(repo_owner, repo_name, os.getenv('GITHUB_TOKEN_GEN_AI'))
+    
+    
+    @kernel_function(name="update_readme_on_githubf", description="Update existing Readme at repo, use only for Readme files")
+    def update_readme_on_githubf(self, 
+                       repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                        file_content: Annotated[str, "full readme file content"],
+                    ) -> Annotated[str, "The output is a string"]:
+            
+            return update_readme_on_github(repo_owner, 
+                                           repo_name, 
+                                           os.getenv('GITHUB_TOKEN_GEN_AI'), 
+                                           file_content)
 
+    @kernel_function(name="create_readme_filef", description="Create new Readme in repo, use only for Readme files")
+    def create_readme_filef(self, 
+                       repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                        file_content: Annotated[str, "full readme file content"],
+                    ) -> Annotated[str, "The output is a string"]:
+            
+            return update_readme_on_github(repo_owner, 
+                                           repo_name,
+                                           file_content, 
+                                           os.getenv('GITHUB_TOKEN_GEN_AI')
+                                           )
 
 
 
 # Global variable to store the kernel
 kernel = None
-conversations = {}
+
+#To store history:
+conversations = {} 
 
 
 
@@ -160,12 +199,9 @@ async def startup_event():
 
 
 #Endpoint for chat prompts:
-#@app.post("/demoprompt")
 @app.post("/demoprompt/{conversation_id}")
 
 async def demo_prompt(conversation_id: str, request: PromptRequest):
-
-    print(conversation_id) 
 
     chat_completion : AzureChatCompletion = kernel.get_service(type=ChatCompletionClientBase)
 
@@ -195,7 +231,6 @@ async def demo_prompt(conversation_id: str, request: PromptRequest):
     # Add the message from the agent to the chat history
     conversation.history.append({"role": "user", "content": request.prompt})
     conversation.history.append({"role": "assistant", "content": str(result)})
-    #history.add_message(result)
 
     return {"response": str(result)}
 
@@ -203,7 +238,6 @@ async def demo_prompt(conversation_id: str, request: PromptRequest):
 
 
 #Serving a simple chat webpage:
-
 @app.get("/")
 async def read_root():
     return {"message": "Welcome to the API. Static files are served under /static"}

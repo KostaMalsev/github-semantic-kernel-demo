@@ -19,7 +19,7 @@ def github_push(repo_owner, repo_name, file_path, commit_message, file_content, 
 
     if f"{github_token}" is  None:
         print(f"github push error: no token")
-        return None
+        return "Failed to push, no Authentication token"
 
 
     # Headers for authentication and specifying API version
@@ -32,8 +32,15 @@ def github_push(repo_owner, repo_name, file_path, commit_message, file_content, 
 
     data = response.json()
 
-    sha = data['sha']
+    
+    if 'sha' in data:
+            sha = data['sha']
+    else:
+        print("Error: Unable to retrieve SHA of existing README.md")
+        print(f"Available keys in response: {', '.join(data.keys())}")
+        return "Failed to push"
 
+    sha = data['sha']
 
     # Prepare the file content (must be base64 encoded)
 
@@ -55,8 +62,10 @@ def github_push(repo_owner, repo_name, file_path, commit_message, file_content, 
 
     if resp.status_code == 200 or resp.status_code == 201:
         print(f"Successfully pushed changes to {file_path}")
+        return f"Successfully pushed changes to {file_path}"
     else:
         print(f"Failed to push changes: {resp.status_code}, {resp.text}")
+        return f"Failed to push changes: {resp.status_code}, {resp.text}" 
 
 
 
@@ -88,6 +97,13 @@ def github_get(repo_owner, repo_name, file_path, branch, github_token):
     if response.status_code == 200:
         # Parse the JSON response
         content = response.json()
+        if 'content' not in content:
+            print("Error: 'content' field is missing.")
+            return "Failed to get the file"
+        else:
+            file_content = base64.b64decode(content['content']).decode('utf-8')
+
+
 
         # The content is base64 encoded, so we need to decode it
         file_content = base64.b64decode(content['content']).decode('utf-8')
@@ -95,7 +111,7 @@ def github_get(repo_owner, repo_name, file_path, branch, github_token):
         return file_content
     else:
         print(f"Failed to get file: {response.status_code}, {response.text}")
-        return None
+        return f"Failed to get file: {response.status_code}, {response.text}"
 
 
 
@@ -114,16 +130,15 @@ def github_get_actions_results(owner, repo, github_token):
     response.raise_for_status()
     
     artifacts = response.json()["artifacts"]
-    #print(artifacts)
 
     artifact_name = "SummaryResult"
     
-    # Find the "Kosta" artifact
+    # Find the "Summary results" artifact
     summary_artifact = next((a for a in artifacts if a["name"] == artifact_name), None)
     
     if not summary_artifact:
         print(f"No artifact named '{artifact_name}' found.")
-        return None
+        return f"Failed to get the artifact, '{artifact_name}' not found"
     
     # Download the artifact
     download_url = summary_artifact["archive_download_url"]
@@ -146,47 +161,83 @@ def github_get_actions_results(owner, repo, github_token):
     
 
 
-
-
-
-'''
-def github_get_actions_results(owner, repo, github_token):
+def get_readme_from_github(owner, repo, github_token):
     """
-    Retrieve the latest GitHub Actions workflow runs for a repository.
-    
-    :param owner: GitHub username or organization name
-    :param repo: Repository name
-    :param github_token: GitHub Personal Access Token
-    :return: List of recent workflow runs with their status
+    Fetches the README.md file from a GitHub repository using the GitHub API.
+
     """
-    url = f"https://api.github.com/repos/{owner}/{repo}/actions/runs"
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/readme"
     headers = {
         "Authorization": f"Bearer {github_token}",
         "Content-Type": "application/vnd.github+json",
         'Accept': 'application/vnd.github+json'
     }
-
+    
     response = requests.get(url, headers=headers)
+    
+    if response.status_code == 200:
+        content = response.json()["content"]
+        decoded_content = base64.b64decode(content).decode("utf-8")
+        return decoded_content
+    else:
+        return f"Failed to fetch README: {response.status_code}, {response.text}"
 
-    if response.status_code != 200:
-        print(f"Error: {response.status_code}")
-        print(response.text)
-        return None
 
-    data = response.json()
-    workflow_runs = data.get('workflow_runs', [])
 
-    results = []
-    for run in workflow_runs:
-        results.append({
-            'id': run['id'],
-            'name': run['name'],
-            'status': run['status'],
-            'conclusion': run['conclusion'],
-            'branch': run['head_branch'],
-            'commit_message': run['head_commit']['message'] if run['head_commit'] else 'N/A',
-            'url': run['html_url']
-        })
 
-    return results
-'''
+def update_readme_on_github(owner, repo, github_token, new_content):
+    """
+    Updates the README.md file in a GitHub repository using the GitHub API.
+    """
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/contents/README.md"
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"Bearer {github_token}"
+    }
+
+    # First, get the current README to obtain its SHA
+    current_readme = get_readme_from_github(owner, repo, github_token)
+
+    # Prepare the update payload
+    payload = {
+        "message": "Update README.md",
+        "content": base64.b64encode(new_content.encode()).decode(),
+        "sha": current_readme["sha"]
+    }
+
+    response = requests.put(url, headers=headers, data=json.dumps(payload))
+
+    if response.status_code == 200:
+        print("README.md updated successfully")
+        return "Successfully updated the readme"
+    else:
+        print(f"Failed to update README: {response.status_code}, {response.text}")
+        return f"Failed to update readme: {response.status_code}, {response.text}"
+
+
+
+def create_readme_file(repo_owner, repo_name, github_token, content):
+    """
+    Create a README.md file in the specified GitHub repository using the GitHub API.
+    """
+    url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/README.md"
+    headers = {
+        "Authorization": f"Bearer {github_token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    data = {
+        "message": "Create README.md",
+        "content": content.encode("utf-8").b64encode().decode("utf-8")
+    }
+
+    response = requests.put(url, headers=headers, json=data)
+
+    if response.status_code == 201:
+        print("README.md file created successfully.")
+        return "Created successfully"
+    else:
+        print(f"Failed to create README.md file. Status code: {response.status_code}")
+        print(f"Error message: {response.json().get('message', 'Unknown error')}")
+        return f"Failed to create Readme: {response.status_code}"

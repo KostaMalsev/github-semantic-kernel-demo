@@ -21,4 +21,4 @@ def get_content_from_url(url: str):
             return "No available content"
     except Exception as e:
         print("Get url failed with error: {}".format(e))
-        return "No available content"
+        return "Failed retrieve content with error: {}".format(e)
