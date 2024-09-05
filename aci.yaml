@@ -1,0 +1,37 @@
+apiVersion: '2021-07-01'
+name: repofixer-container-group
+type: Microsoft.ContainerInstance/containerGroups
+location: eastus
+properties:
+  containers:
+  - name: repofixer
+    properties:
+      image: your-registry.azurecr.io/repofixer:latest  # Replace with your actual image registry
+      command:
+      - uvicorn
+      - app:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - '8000'
+      - --reload
+      ports:
+      - port: 8000
+      environmentVariables:
+      - name: GLOBAL_LLM_SERVICE
+        value: AzureOpenAI
+      - name: AZURE_OPENAI_ENDPOINT
+        value: https://ai-kostyamalsevai4154623923737068.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview
+      - name: AZURE_OPENAI_CHAT_DEPLOYMENT_NAME
+        value: gpt-4o
+      - name: AZURE_OPENAI_API_KEY
+        secureValue: ${AZURE_OPENAI_API_KEY}
+      - name: GITHUB_TOKEN_GEN_AI
+        secureValue: ${GITHUB_TOKEN_GEN_AI}
+  osType: Linux
+  restartPolicy: Always
+  ipAddress:
+    type: Public
+    ports:
+    - protocol: TCP
+      port: 8000
