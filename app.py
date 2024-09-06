@@ -37,6 +37,7 @@ from gitapi import (github_get,
                     )
 
 from fetchurl import get_content_from_url
+from fetchurl import extract_image_urls
 
 
 
@@ -103,11 +104,6 @@ class GithubPlugin:
                     ) -> Annotated[str, "The output is a string"]:
         return github_get_actions_results(repo_owner,repo_name,os.getenv('GITHUB_TOKEN_GEN_AI'))
     
-
-    @kernel_function(name="github_get_content_from_urlf", description="Get all kind of content from url")
-    def github_get_content_from_urlf(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
-        return get_content_from_url(url)
-    
     
     @kernel_function(name="get_readme_from_githubf", description="Get existing Readme from repo, use only for Readme files")
     def get_readme_from_githubf(self, 
@@ -142,6 +138,18 @@ class GithubPlugin:
                                            file_content, 
                                            os.getenv('GITHUB_TOKEN_GEN_AI')
                                            )
+    
+    @kernel_function(name="github_get_html_content_from_urlf", description="Get html content from url")
+    def github_get_html_content_from_urlf(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
+        return get_content_from_url(url,'html',1000)
+    
+    @kernel_function(name="github_get_text_content_from_urlf", description="Get text only content from url")
+    def github_get_text_content_from_urlf(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
+        return get_content_from_url(url,'text',1000)
+    
+    @kernel_function(name="extract_image_urlsf", description="Get image only content from url")
+    def extract_image_urlsf(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a list of url strings"]:
+        return extract_image_urls(url)
 
 
 
