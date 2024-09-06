@@ -6,7 +6,7 @@ properties:
   containers:
   - name: repofixer
     properties:
-      image: your-registry.azurecr.io/repofixer:latest  # Replace with your actual image registry
+      image: kostyamalsev/repofixer:latest
       command:
       - uvicorn
       - app:app

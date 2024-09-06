@@ -106,9 +106,7 @@
             responseText.innerHTML = 'Thinking...';
 
             try {
-                //const response = await fetch('http://localhost:8000/demoprompt', {
-                const response = await fetch(`http://localhost:8000/demoprompt/${conversationId}`, {
-
+                const response = await fetch(`/demoprompt/${conversationId}`, {            
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

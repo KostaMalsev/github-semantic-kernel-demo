@@ -1,4 +1,5 @@
-# syntax=docker/dockerfile:1
+
+# syntax=docker/dockerfile:1
 
 # Backend - Python
 # Use the official Python image as the base image
@@ -9,6 +10,12 @@ COPY . /app
 
 # Set the working directory in the container to /app
 WORKDIR /app
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the environment file
 COPY .env /app/.env
