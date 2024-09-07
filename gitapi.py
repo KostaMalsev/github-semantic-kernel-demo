@@ -11,7 +11,6 @@ import io
 
 
 
-
 def github_push(repo_owner, repo_name, file_path, commit_message, file_content, github_token):
     
     # GitHub API endpoint
@@ -69,9 +68,6 @@ def github_push(repo_owner, repo_name, file_path, commit_message, file_content, 
 
 
 
-
-
-
 def github_get(repo_owner, repo_name, file_path, branch, github_token):
     
     # GitHub API endpoint
@@ -104,7 +100,6 @@ def github_get(repo_owner, repo_name, file_path, branch, github_token):
             file_content = base64.b64decode(content['content']).decode('utf-8')
 
 
-
         # The content is base64 encoded, so we need to decode it
         file_content = base64.b64decode(content['content']).decode('utf-8')
 
@@ -112,6 +107,47 @@ def github_get(repo_owner, repo_name, file_path, branch, github_token):
     else:
         print(f"Failed to get file: {response.status_code}, {response.text}")
         return f"Failed to get file: {response.status_code}, {response.text}"
+
+
+
+
+
+def github_create_file(repo_owner, repo_name, file_path, file_content, commit_message, github_token,branch="main"):
+
+    # GitHub API endpoint
+    api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{file_path}"
+
+    base64_content = base64.b64encode(file_content.encode("utf-8"))
+
+
+    # Prepare the data for the API request
+    data = {
+        "message": commit_message,
+        "content": base64_content.decode("utf-8"),
+    }
+
+    # Get the GitHub token from environment variable
+    if not github_token:
+        raise ValueError("GITHUB_TOKEN environment variable is not set")
+
+    # Set up the headers for authentication
+    headers = {
+        "Authorization": f"Bearer {github_token}",
+        "Content-Type": "application/vnd.github+json",
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+    # Make the API request
+    response = requests.put(api_url, json=data, headers=headers)
+
+    # Check if the request was successful
+    if response.status_code == 201:
+        print(f"File '{file_path}' created successfully in {repo_owner}/{repo_name}")
+        return response.json()
+    else:
+        print(f"Failed to create file. Status code: {response.status_code}")
+        print(f"Response: {response.text}")
+        return f"Failed to create file. Status code: {response.status_code}"
 
 
 
@@ -161,10 +197,103 @@ def github_get_actions_results(owner, repo, github_token):
     
 
 
+
+def create_github_action(repo_owner, repo_name, workflow_name,github_token, workflow_content):
+    """
+    Create a new GitHub Action workflow file in the specified repository.
+    :param workflow_name: The name of the workflow file (e.g., "main.yml")
+    :param workflow_content: The content of the workflow file
+    :return: A dictionary containing the API response or None if the request failed
+    """
+    # GitHub API endpoint
+    api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/" + ".github/workflows/"+f"{workflow_name}"
+    
+    # Get the GitHub token from environment variable
+    if not github_token:
+        raise ValueError("GITHUB_TOKEN environment variable is not set")
+
+    # Encode workflow content to Base64
+    base64_content = base64.b64encode(workflow_content.encode("utf-8"))
+
+    # Prepare the data for the API request
+    data = {
+        "message": "Create GitHub Action workflow",
+        "content": base64_content.decode("utf-8"),
+        "branch": "main"
+    }
+
+    # Set up the headers for authentication
+    headers = {
+        "Authorization": f"Bearer {github_token}",
+        "Content-Type": "application/vnd.github+json",
+        "Accept": "application/vnd.github.v3+json"
+    }
+   
+    
+
+    # Make the API request
+    response = requests.put(api_url, json=data, headers=headers)
+
+    # Check if the request was successful
+    if response.status_code == 201:
+        print(f"GitHub Action workflow '{workflow_name}' created successfully in {repo_owner}/{repo_name}")
+        return response.json()
+    else:
+        print(f"Failed to create GitHub Action workflow. Status code: {response.status_code}")
+        print(f"Response: {response.text}")
+        return response.text
+
+
+
+def update_github_action(repo_owner, repo_name, workflow_name, new_content, github_token, branch="main"):
+    """
+    Update an existing GitHub Action workflow file in the specified repository.
+    """
+    # GitHub API endpoint
+    api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/.github/workflows/{workflow_name}"
+
+    # Set up the headers for authentication
+    headers = {
+        "Authorization": f"Bearer {github_token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+    # First, get the current file to obtain its SHA
+    response = requests.get(api_url, headers=headers, params={"ref": branch})
+    if response.status_code != 200:
+        return {"error": f"Failed to fetch current workflow. Status code: {response.status_code}, Response: {response.text}"}
+
+    current_file = response.json()
+    current_sha = current_file["sha"]
+
+    # Encode new content to Base64
+    base64_content = base64.b64encode(new_content.encode("utf-8"))
+    
+    # Prepare the data for the API request
+    data = {
+        "message": f"Update GitHub Action workflow: {workflow_name}",
+        "content": base64_content.decode("utf-8"),
+        "sha": current_sha,
+        "branch": branch
+    }
+
+    # Make the API request to update the file
+    response = requests.put(api_url, json=data, headers=headers)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        print(f"GitHub Action workflow '{workflow_name}' updated successfully in {repo_owner}/{repo_name}")
+        return response.json()
+    else:
+        error_message = f"Failed to update workflow. Status code: {response.status_code}, Response: {response.text}"
+        print(error_message)
+        return error_message
+
+
+
 def get_readme_from_github(owner, repo, github_token):
     """
     Fetches the README.md file from a GitHub repository using the GitHub API.
-
     """
 
     url = f"https://api.github.com/repos/{owner}/{repo}/readme"
@@ -241,3 +370,41 @@ def create_readme_file(repo_owner, repo_name, github_token, content):
         print(f"Failed to create README.md file. Status code: {response.status_code}")
         print(f"Error message: {response.json().get('message', 'Unknown error')}")
         return f"Failed to create Readme: {response.status_code}"
+
+
+
+
+
+def github_create_directory(repo_owner, repo_name, directory_path, github_token, branch="main"):
+    
+    """
+    Create a new directory in a GitHub repository.
+    """
+
+    # GitHub API endpoint
+    api_url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/{directory_path}/1"
+
+    # Prepare the data for the API request
+    data = {
+        "message": f"Create directory: {directory_path}",
+        "content": "",  # Empty content for directory creation
+        "branch": branch
+    }
+
+    # Set up the headers for authentication
+    headers = {
+        "Authorization": f"Bearer {github_token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+    # Make the API request
+    response = requests.put(api_url, json=data, headers=headers)
+
+    # Check if the request was successful
+    if response.status_code == 201:
+        print(f"Directory '{directory_path}' created successfully in {repo_owner}/{repo_name}")
+        return response.json()
+    else:
+        error_message = f"Failed to create directory. Status code: {response.status_code}, Response: {response.text}"
+        print(error_message)
+        return error_message

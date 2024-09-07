@@ -30,10 +30,14 @@ from semantic_kernel.kernel import Kernel
 
 from gitapi import (github_get,
                     github_push,
+                    github_create_file,
                     get_readme_from_github,
                     github_get_actions_results,
                     update_readme_on_github,
-                    create_readme_file
+                    create_readme_file,
+                    github_create_directory,  
+                    create_github_action,     
+                    update_github_action      
                     )
 
 from fetchurl import get_content_from_url
@@ -75,7 +79,19 @@ class Conversation(BaseModel):
 #Definition of the custom fetch plugin:
 class GithubPlugin:
     """Plugin provides github api """
-
+    
+    @kernel_function(name="github_create_filef", description="Create a new file in github repo")
+    def github_create_filef(self, 
+                        repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                        file_path: Annotated[str, "file path"],
+                        file_content: Annotated[str, "file content"],
+                    ) -> Annotated[str, "The output is a string"]:
+        commit_message  = f"AI generated on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        return github_create_file(repo_owner, repo_name, file_path, file_content, commit_message, os.getenv('GITHUB_TOKEN_GEN_AI'),branch="main")
+    
+              #github_create_file(repo_owner, repo_name, file_path, file_content, commit_message, github_token,branch="main"):
+    
     @kernel_function(name="github_pushf", description="Push file from github repo")
     def github_pushf(self, 
                         repo_owner: Annotated[str, "repository owner"],
@@ -103,8 +119,36 @@ class GithubPlugin:
                         repo_name: Annotated[str, "repository name"],
                     ) -> Annotated[str, "The output is a string"]:
         return github_get_actions_results(repo_owner,repo_name,os.getenv('GITHUB_TOKEN_GEN_AI'))
+
     
-    
+    @kernel_function(name="github_create_directoryf", description="Create a new empty directory in github repo")
+    def github_create_directoryf(self, 
+                        repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                        directory_path: Annotated[str, "directory path"],
+                    ) -> Annotated[str, "The output is a string"]:
+        return github_create_directory(repo_owner, repo_name, directory_path, os.getenv('GITHUB_TOKEN_GEN_AI'), branch="main")
+
+    @kernel_function(name="create_github_actionf", description="Create a new GitHub Action workflow")
+    def create_github_actionf(self, 
+                        repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                        workflow_name: Annotated[str, "workflow file name"],
+                        workflow_content: Annotated[str, "content of the workflow file"],
+                    ) -> Annotated[str, "The output is a string"]:
+        return create_github_action(repo_owner, repo_name, workflow_name, os.getenv('GITHUB_TOKEN_GEN_AI'), workflow_content)
+
+    @kernel_function(name="update_github_actionf", description="Update an existing GitHub Action workflow")
+    def update_github_actionf(self, 
+                        repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                        workflow_name: Annotated[str, "workflow file name"],
+                        new_content: Annotated[str, "new content of the workflow file"],
+                    ) -> Annotated[str, "The output is a string"]:
+        return update_github_action(repo_owner, repo_name, workflow_name, new_content, os.getenv('GITHUB_TOKEN_GEN_AI'), branch="main")
+
+
+
     @kernel_function(name="get_readme_from_githubf", description="Get existing Readme from repo, use only for Readme files")
     def get_readme_from_githubf(self, 
                        repo_owner: Annotated[str, "repository owner"],
@@ -150,6 +194,16 @@ class GithubPlugin:
     @kernel_function(name="extract_image_urlsf", description="Get image only content from url")
     def extract_image_urlsf(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a list of url strings"]:
         return extract_image_urls(url)
+    
+    
+    @kernel_function(name="check_credentials_to_github", description="Check credentials to github")
+    def check_credentials_to_github(self) -> Annotated[str, "The output is result"]:
+        if not os.getenv('GITHUB_TOKEN_GEN_AI'):
+            return "no credentials to github"
+        else:
+            return "have credentials to github"
+    
+
 
 
 
