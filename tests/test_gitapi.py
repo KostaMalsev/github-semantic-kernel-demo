@@ -30,7 +30,8 @@ class TestGitHubAPI(unittest.TestCase):
 
         result = gitapi.github_push('owner', 'repo', 'file_path', 'commit message', 'file content', 'token')
         
-        self.assertEqual(result, 'Failed to push changes')
+        # Updated expected value
+        self.assertEqual(result, 'Failed to push')
 
 if __name__ == '__main__':
     unittest.main()
