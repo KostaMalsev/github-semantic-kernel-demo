@@ -3,3 +3,4 @@ requests
 beautifulsoup4
 fastapi
 httpx
+python-dotenv  # Added missing dependency
