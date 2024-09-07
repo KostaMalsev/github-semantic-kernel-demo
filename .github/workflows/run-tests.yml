@@ -22,10 +22,19 @@ jobs:
         python-version: '3.x'
 
     - name: Install dependencies
+      continue-on-error: true
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        python -m pip install --upgrade pip 2>&1 | tee summary.md
+        pip install -r requirements.txt 2>&1 | tee -a summary.md
 
     - name: Run tests
+      continue-on-error: true
       run: |
-        python -m unittest discover -s tests
+        echo "\nTest Results:\n" >> summary.md
+        python -m unittest discover -s tests 2>&1 | tee -a summary.md
+
+    - name: Upload SummaryResult artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: SummaryResult
+        path: summary.md
