@@ -1,2 +1,4 @@
 pytest
 requests
+beautifulsoup4
+fastapi
