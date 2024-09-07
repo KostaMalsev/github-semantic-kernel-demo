@@ -32,29 +32,5 @@ class TestGitHubAPI(unittest.TestCase):
         
         self.assertEqual(result, 'Failed to push changes')
 
-    @patch('gitapi.requests.get')
-    '''
-    def test_github_get_actions_results(self, mock_get):
-        mock_get_response = MagicMock()
-        mock_get_response.status_code = 200
-        mock_get_response.json.return_value = {
-            'artifacts': [
-                {
-                    'name': 'SummaryResult',
-                    'archive_download_url': 'http://example.com/download'
-                }
-            ]
-        }
-        mock_get.return_value = mock_get_response
-
-        mock_download_response = MagicMock()
-        mock_download_response.status_code = 200
-        mock_download_response.content = b''  # empty zip file content for simplicity
-
-        with patch('gitapi.zipfile.ZipFile.extractall'), \
-             patch('gitapi.requests.get', return_value=mock_download_response):
-            result = gitapi.github_get_actions_results('owner', 'repo', 'token')
-            self.assertIsInstance(result, str)
-    '''
 if __name__ == '__main__':
     unittest.main()
