@@ -31,7 +31,7 @@ jobs:
       continue-on-error: true
       run: |
         echo "\nTest Results:\n" >> summary.md
-        python -m unittest discover -s tests -p '*_test.py' 2>&1 | tee -a summary.md
+        python -m unittest discover -s tests -p '*.py' 2>&1 | tee -a summary.md
 
     - name: Upload SummaryResult artifact
       uses: actions/upload-artifact@v2
