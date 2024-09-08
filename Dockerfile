@@ -13,6 +13,10 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
+# Copy the git_api directory and its contents into the container at /app/git_api
+RUN mkdir -p /app/github_api
+COPY github_api/* /app/git_api/
+
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
