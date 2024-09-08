@@ -10,11 +10,6 @@ def get_content_from_url(url: str, content_type: str = 'html', max_length: Optio
     """
     Fetch and return the content from a given URL.
 
-    Args:
-    url (str): The URL to fetch content from.
-    content_type (str): Type of content to return - 'html' for full HTML, 'text' for text only.
-    max_length (Optional[int]): Maximum number of characters to return. If None, return all content.
-
     Returns:
     str: The content of the webpage, or an error message.
     """
@@ -54,10 +49,6 @@ def get_content_from_url(url: str, content_type: str = 'html', max_length: Optio
 def extract_image_urls(url):
     """
     Extracts all image URLs from the given HTML content.
-    
-    Args:
-    html_content (str): The HTML content to parse.
-    base_url (str): The base URL of the page, used to convert relative URLs to absolute.
     
     Returns:
     list: A list of absolute URLs of all images found in the HTML.

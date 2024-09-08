@@ -9,8 +9,6 @@ import io
 #Implementation of github API
 
 
-
-
 def github_push(repo_owner, repo_name, file_path, commit_message, file_content, github_token):
     
     # GitHub API endpoint
