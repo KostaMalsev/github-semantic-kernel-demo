@@ -186,6 +186,9 @@ async def setup_kernel():
         raise ValueError("This script is configured to use Azure OpenAI. Please check your .env file.")
 
     azure_api_key = os.getenv('AZURE_OPENAI_API_KEY') or read_secret('AZURE_OPENAI_API_KEY')
+    
+    print("AZURE API KEY:")
+    print(azure_api_key)
 
     service_id = "function_calling"
     

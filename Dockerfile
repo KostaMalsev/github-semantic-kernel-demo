@@ -3,10 +3,6 @@
 # Use the official Python image as the base image
 FROM python:3.11
 
-# Set environment variables to optimize image
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
 # Set the working directory in the container to /app
 WORKDIR /app
 

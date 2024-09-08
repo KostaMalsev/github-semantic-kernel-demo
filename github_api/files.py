@@ -42,11 +42,6 @@ class GitHubFile:
             
         except requests.exceptions.HTTPError:
             pass  # File doesn't exist, creating new file
-        
-        #print("HEADERS:")
-        #print(self._get_headers())
-        #print("CONTENT:")
-        #print(data)
 
         return make_github_request("PUT", url, self._get_headers(), data)
 
