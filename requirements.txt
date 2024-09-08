@@ -5,3 +5,4 @@ fastapi
 httpx
 python-dotenv
 semantic-kernel
+uvicorn
