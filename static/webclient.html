@@ -2,6 +2,8 @@
 <html lang="en">
 
 <head>
+    <link rel="icon" type="image/x-icon" href="/static/fixer.png">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Chat Application with Markdown Support</title>
@@ -80,19 +82,6 @@
 
     <script>
     
-    function changeFavicon(newFaviconUrl) {
-      let link = document.querySelector("link[rel~='icon']");
-  
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-        document.head.appendChild(link);
-      }
-  
-        link.href = newFaviconUrl;
-      }
-      
-      changeFavicon("/app/static/fixer.jpg")
 
         function generateUniqueId() {
             const timestamp = Date.now();
