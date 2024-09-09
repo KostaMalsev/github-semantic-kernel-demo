@@ -79,13 +79,25 @@
     
 
     <script>
+    
+    function changeFavicon(newFaviconUrl) {
+      let link = document.querySelector("link[rel~='icon']");
+  
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+  
+        link.href = newFaviconUrl;
+      }
 
         function generateUniqueId() {
             const timestamp = Date.now();
             const randomNumber = Math.random();
             const randomString = randomNumber.toString(36).substr(2, 9);
             return `${timestamp}-${randomString}`;
-}
+        }
 
         const sendButton = document.getElementById("send-button");
         const promptInput = document.getElementById("prompt-input");
