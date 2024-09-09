@@ -54,9 +54,10 @@ class GitHubFile:
         )
     
     def list_files(self, path="", branch="main"):
-        url = f"{self.base_url}/git/trees/{branch}"
-        params = {"recursive": "1"}
-        response = make_github_request("GET", url, self._get_headers(), params)
+        base_url  = (f"{self.base_url}")
+        url = f"{base_url[:-9]}/git/trees/{branch}?recursive=1"        
+
+        response = make_github_request("GET", url, self._get_headers())
         
         all_files = []
         for item in response['tree']:

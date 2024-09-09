@@ -60,8 +60,8 @@ class GithubPlugin:
         self.github_actions = GitHubActions('', '')  # Initialize with empty strings
 
     
-    @kernel_function(name="github_list_filesf", description="List files in a github repo directory")
-    def github_list_filesf(self, 
+    @kernel_function(name="github_list_files", description="List files in a github repo directory")
+    def github_list_files(self, 
                         repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                         directory_path: Annotated[str, "directory path (optional)"] = "",
@@ -71,8 +71,8 @@ class GithubPlugin:
         return "\n".join(files)
     
     
-    @kernel_function(name="github_create_filef", description="Create a new file in github repo")
-    def github_create_filef(self, 
+    @kernel_function(name="github_create_file", description="Create a new file in github repo")
+    def github_create_file(self, 
                         repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                         file_path: Annotated[str, "file path"],
@@ -82,8 +82,8 @@ class GithubPlugin:
         commit_message = f"AI generated on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         return self.github_file.create_or_update_file(file_path, file_content, commit_message)
 
-    @kernel_function(name="github_pushf", description="Push file to github repo")
-    def github_pushf(self, 
+    @kernel_function(name="github_push", description="Push file to github repo")
+    def github_push(self, 
                         repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                         file_path: Annotated[str, "file path"],
@@ -93,8 +93,8 @@ class GithubPlugin:
         commit_message = f"AI updated on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         return self.github_file.create_or_update_file(file_path, file_content, commit_message)
 
-    @kernel_function(name="github_getf", description="Get file from github repo")
-    def github_getf(self, 
+    @kernel_function(name="github_get", description="Get file from github repo")
+    def github_get(self, 
                         repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                         file_path: Annotated[str, "file path"],
@@ -102,16 +102,16 @@ class GithubPlugin:
         self.github_file = GitHubFile(repo_owner, repo_name)
         return self.github_file.get_file(file_path)["content"]
 
-    @kernel_function(name="github_get_actions_resultsf", description="Get github actions results")
-    def github_get_actions_resultsf(self, 
+    @kernel_function(name="github_get_actions_results", description="Get github actions results")
+    def github_get_actions_results(self, 
                         repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                     ) -> Annotated[str, "The output is a string"]:
         self.github_actions = GitHubActions(repo_owner, repo_name)
         return self.github_actions.get_actions_results()
 
-    @kernel_function(name="github_create_directoryf", description="Create a new empty directory in github repo")
-    def github_create_directoryf(self, 
+    @kernel_function(name="github_create_directory", description="Create a new empty directory in github repo")
+    def github_create_directory(self, 
                         repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                         directory_path: Annotated[str, "directory path"],
@@ -119,8 +119,8 @@ class GithubPlugin:
         self.github_file = GitHubFile(repo_owner, repo_name)
         return self.github_file.create_directory(directory_path)
 
-    @kernel_function(name="create_github_actionf", description="Create a new GitHub Action workflow")
-    def create_github_actionf(self, 
+    @kernel_function(name="create_github_action", description="Create a new GitHub Action workflow")
+    def create_github_action(self, 
                         repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                         workflow_name: Annotated[str, "workflow file name"],
@@ -129,8 +129,8 @@ class GithubPlugin:
         self.github_actions = GitHubActions(repo_owner, repo_name)
         return self.github_actions.create_or_update_workflow(workflow_name, workflow_content)
 
-    @kernel_function(name="update_github_actionf", description="Update an existing GitHub Action workflow")
-    def update_github_actionf(self, 
+    @kernel_function(name="update_github_action", description="Update an existing GitHub Action workflow")
+    def update_github_action(self, 
                         repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                         workflow_name: Annotated[str, "workflow file name"],
@@ -139,16 +139,16 @@ class GithubPlugin:
         self.github_actions = GitHubActions(repo_owner, repo_name)
         return self.github_actions.create_or_update_workflow(workflow_name, new_content)
 
-    @kernel_function(name="get_readme_from_githubf", description="Get existing Readme from repo, use only for Readme files")
-    def get_readme_from_githubf(self, 
+    @kernel_function(name="get_readme_from_github", description="Get existing Readme from repo, use only for Readme files")
+    def get_readme_from_github(self, 
                        repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                     ) -> Annotated[str, "The output is a string"]:
         self.github_file = GitHubFile(repo_owner, repo_name)
         return self.github_file.get_file('README.md')
 
-    @kernel_function(name="update_readme_on_githubf", description="Update existing Readme at repo, use only for Readme files")
-    def update_readme_on_githubf(self, 
+    @kernel_function(name="update_readme_on_github", description="Update existing Readme at repo, use only for Readme files")
+    def update_readme_on_github(self, 
                        repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                         file_content: Annotated[str, "full readme file content"],
@@ -156,8 +156,8 @@ class GithubPlugin:
         self.github_file = GitHubFile(repo_owner, repo_name)
         return self.github_file.create_or_update_file('README.md', file_content, "Update README.md")
 
-    @kernel_function(name="create_readme_filef", description="Create new Readme in repo, use only for Readme files")
-    def create_readme_filef(self, 
+    @kernel_function(name="create_readme_file", description="Create new Readme in repo, use only for Readme files")
+    def create_readme_file(self, 
                        repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                         file_content: Annotated[str, "full readme file content"],
@@ -166,16 +166,16 @@ class GithubPlugin:
         return self.github_file.create_or_update_file('README.md', file_content, "Create README.md")
 
     # The fetch utility functions:
-    @kernel_function(name="github_get_html_content_from_urlf", description="Get html content from url")
-    def github_get_html_content_from_urlf(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
+    @kernel_function(name="github_get_html_content_from_url", description="Get html content from url")
+    def github_get_html_content_from_url(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
         return get_content_from_url(url, 'html', 1000)
     
-    @kernel_function(name="github_get_text_content_from_urlf", description="Get text only content from url")
-    def github_get_text_content_from_urlf(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
+    @kernel_function(name="github_get_text_content_from_url", description="Get text only content from url")
+    def github_get_text_content_from_url(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
         return get_content_from_url(url, 'text', 1000)
     
-    @kernel_function(name="extract_image_urlsf", description="Get image only content from url")
-    def extract_image_urlsf(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a list of url strings"]:
+    @kernel_function(name="extract_image_urls", description="Get image only content from url")
+    def extract_image_urls(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a list of url strings"]:
         return extract_image_urls(url)
     
     @kernel_function(name="check_credentials_to_github", description="Check credentials to github")
@@ -199,9 +199,6 @@ async def setup_kernel():
 
     azure_api_key = os.getenv('AZURE_OPENAI_API_KEY') or read_secret('AZURE_OPENAI_API_KEY')
     
-    print("AZURE API KEY:")
-    print(azure_api_key)
-
     service_id = "function_calling"
     
     ai_service = AzureChatCompletion(
