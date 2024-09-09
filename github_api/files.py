@@ -52,3 +52,17 @@ class GitHubFile:
             f"Create directory: {directory_path}",
             branch
         )
+    
+    def list_files(self, path="", branch="main"):
+        url = f"{self.base_url}/git/trees/{branch}"
+        params = {"recursive": "1"}
+        response = make_github_request("GET", url, self._get_headers(), params)
+        
+        all_files = []
+        for item in response['tree']:
+            if item['type'] == 'blob':  # 'blob' represents a file
+                all_files.append(item['path'])
+        
+        if path:
+            return [file for file in all_files if file.startswith(path)]
+        return all_files

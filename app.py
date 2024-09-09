@@ -59,6 +59,18 @@ class GithubPlugin:
         self.github_file = GitHubFile('', '')  # Initialize with empty strings
         self.github_actions = GitHubActions('', '')  # Initialize with empty strings
 
+    
+    @kernel_function(name="github_list_filesf", description="List files in a github repo directory")
+    def github_list_filesf(self, 
+                        repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                        directory_path: Annotated[str, "directory path (optional)"] = "",
+                    ) -> Annotated[str, "The output is a string containing a list of files"]:
+        self.github_file = GitHubFile(repo_owner, repo_name)
+        files = self.github_file.list_files(directory_path)
+        return "\n".join(files)
+    
+    
     @kernel_function(name="github_create_filef", description="Create a new file in github repo")
     def github_create_filef(self, 
                         repo_owner: Annotated[str, "repository owner"],
