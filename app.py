@@ -196,8 +196,13 @@ async def setup_kernel():
 
     if os.getenv('GLOBAL_LLM_SERVICE') != "AzureOpenAI":
         raise ValueError("This script is configured to use Azure OpenAI. Please check your .env file.")
+    
 
     azure_api_key = os.getenv('AZURE_OPENAI_API_KEY') or read_secret('AZURE_OPENAI_API_KEY')
+    github_api_key = os.getenv('GITHUB_TOKEN_GEN_AI') or read_secret('GITHUB_TOKEN_GEN_AI')
+    
+    os.environ['AZURE_OPENAI_API_KEY'] = azure_api_key
+    os.environ['GITHUB_TOKEN_GEN_AI'] = github_api_key
     
     service_id = "function_calling"
     
@@ -240,7 +245,6 @@ async def demo_prompt(conversation_id: str, request: PromptRequest):
 
     execution_settings = AzureChatPromptExecutionSettings(tool_choice="auto")
     execution_settings.function_choice_behavior = FunctionChoiceBehavior.Auto(auto_invoke=True, filters={})
-    #function_choice_behavior=FunctionChoiceBehavior.Auto(auto_invoke=True)
     
     result = (await chat_completion.get_chat_message_contents(
             chat_history=history,
