@@ -110,6 +110,25 @@ Implemented in `app.py` via `GithubPlugin`:
     docker-compose up --build
     ```
 
+### Docker Compose Details
+
+The project uses the `docker-compose.yml` configuration to set up the application.
+
+- **Service:** `repofixer`
+  - **Build Context:** Current directory (`.`).
+  - **Dockerfile:** `Dockerfile` in the current directory.
+  - **Image:** `kostyamalsev/repofixer:latest` (for ARM architecture).
+  - **Command:** Runs `uvicorn app:app --host 0.0.0.0 --port 8000 --reload` inside the container.
+  - **Environment Variables:**
+    - `GLOBAL_LLM_SERVICE=AzureOpenAI`
+    - `AZURE_OPENAI_ENDPOINT=https://ai-kostyamalsevai4154623923737068.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview`
+    - `AZURE_OPENAI_CHAT_DEPLOYMENT_NAME=gpt-4o`
+  - **Ports:**
+    - `8000:8000`
+  - **Secrets:**
+    - `AZURE_OPENAI_API_KEY` (from `./gen-api-key.txt`)
+    - `GITHUB_TOKEN_GEN_AI` (from `./git-api-key.txt`)
+
 ## License
 
 This project is licensed under the MIT License.
