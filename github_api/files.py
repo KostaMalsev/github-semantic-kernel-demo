@@ -216,3 +216,53 @@ class GitHubFile:
         response = requests.delete(url, headers=self._get_headers(), json=data)
         response.raise_for_status()
         return response.json()
+    
+    
+    
+    def list_repositories(self, per_page=100):
+        """
+        List repositories for the owner specified in the GitHubFile instance.
+
+        Args:
+        per_page (int): Number of repositories to return per page (max 100).
+
+        Returns:
+        str: A formatted string containing information about all repositories.
+        """
+        base_url = f"https://api.github.com/users/{self.owner}/repos"
+        
+        params = {
+            "per_page": per_page,
+            "sort": "updated",
+            "direction": "desc"
+        }
+
+        all_repos = []
+        page = 1
+
+        while True:
+            params["page"] = page
+            response = make_github_request("GET", base_url, self._get_headers(), params)
+            
+            repos = response
+            if not repos:
+                break
+
+            all_repos.extend(repos)
+            page += 1
+
+            if len(repos) < per_page:
+                break
+
+        # Format the results as a string
+        result = f"Repositories for {self.owner}:\n"
+        for repo in all_repos:
+            result += f"- {repo['name']}\n"
+            result += f"  Description: {repo['description'] or 'No description'}\n"
+            result += f"  URL: {repo['html_url']}\n"
+            result += f"  Stars: {repo['stargazers_count']}\n"
+            result += f"  Forks: {repo['forks_count']}\n"
+            result += f"  Last updated: {repo['updated_at']}\n\n"
+
+        return result   
+    

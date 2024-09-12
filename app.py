@@ -223,6 +223,13 @@ class GithubPlugin:
             return "no credentials to github"
         else:
             return "have credentials to github"
+    
+    @kernel_function(name="github_list_repositories", description="List repositories for a GitHub user or organization")
+    def github_list_repositories(self, 
+                                 owner: Annotated[str, "GitHub username or organization name"],
+                                ) -> Annotated[str, "A formatted string containing information about all repositories"]:
+        self.github_file = GitHubFile(owner, '')
+        return self.github_file.list_repositories()
 
 # Global variable to store the kernel
 kernel = None
