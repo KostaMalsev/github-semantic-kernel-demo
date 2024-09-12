@@ -279,7 +279,7 @@ async def setup_kernel():
     if azure_global_llm_service != "AzureOpenAI":
         raise ValueError("This script is configured to use Azure OpenAI. Please check your .env file: GLOBAL_LLM_SERVICE")    
     
-    
+    print(azure_api_key)
     service_id = "function_calling"
     
     ai_service = AzureChatCompletion(
