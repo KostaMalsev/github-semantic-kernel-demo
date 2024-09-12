@@ -234,14 +234,13 @@ async def setup_kernel():
     kernel = Kernel()
 
     if os.getenv('GLOBAL_LLM_SERVICE') != "AzureOpenAI":
-        raise ValueError("This script is configured to use Azure OpenAI. Please check your .env file.")
-
-    if( (not os.getenv('AZURE_OPENAI_API_KEY')) or (not os.getenv('AZURE_OPENAI_API_KEY')) ):
-        azure_api_key = os.getenv('AZURE_OPENAI_API_KEY') or read_secret('AZURE_OPENAI_API_KEY')
-        github_api_key = os.getenv('GITHUB_TOKEN_GEN_AI') or read_secret('GITHUB_TOKEN_GEN_AI')
+        raise ValueError("This script is configured to use Azure OpenAI. Please check your .env file.")    
+    
+    azure_api_key = os.getenv('AZURE_OPENAI_API_KEY') or read_secret('AZURE_OPENAI_API_KEY')
+    github_api_key = os.getenv('GITHUB_TOKEN_GEN_AI') or read_secret('GITHUB_TOKEN_GEN_AI')
         
-        os.environ['AZURE_OPENAI_API_KEY'] = azure_api_key
-        os.environ['GITHUB_TOKEN_GEN_AI'] = github_api_key
+    os.environ['AZURE_OPENAI_API_KEY'] = azure_api_key
+    os.environ['GITHUB_TOKEN_GEN_AI'] = github_api_key
     
     service_id = "function_calling"
     
@@ -265,7 +264,10 @@ def get_or_create_conversation(conversation_id: str):
 @app.on_event("startup")
 async def startup_event():
     global kernel
-    load_dotenv()
+    
+    if( (not os.getenv('AZURE_OPENAI_API_KEY')) or (not os.getenv('AZURE_OPENAI_API_KEY')) ):
+        load_dotenv()
+    
     kernel = await setup_kernel()
 
 @app.post("/demoprompt/{conversation_id}")
