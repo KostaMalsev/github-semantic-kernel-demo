@@ -265,8 +265,8 @@ async def setup_kernel():
         os.environ['GITHUB_TOKEN_GEN_AI'] = github_api_key
         
     print("AZURE_OPENAI_CHAT_DEPLOYMENT_NAME: ",azure_deployment_name)
-    print("AZURE_OPENAI_API_KEY: ",azure_api_key)
-    print("GLOBAL_LLM_SERVICE:", azure_global_llm_service)
+    print("AZURE_OPENAI_API_KEY:",azure_api_key,"*")
+    print("GLOBAL_LLM_SERVICE:",azure_global_llm_service,"*")
 
     # Check if we have the necessary API key
     if not azure_api_key:
