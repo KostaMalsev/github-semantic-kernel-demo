@@ -239,8 +239,41 @@ conversations = {}
 
 async def setup_kernel():
     kernel = Kernel()
+    
+    def get_env_var(var_name):
+        value = os.getenv(var_name)
+        if not value:
+            load_dotenv()
+            value = os.getenv(var_name)
+        if not value:
+            value = read_secret(var_name)
+        return value
 
-    if os.getenv('GLOBAL_LLM_SERVICE') != "AzureOpenAI":
+    # Get API keys
+    azure_api_key = get_env_var('AZURE_OPENAI_API_KEY')
+    github_api_key = get_env_var('GITHUB_TOKEN_GEN_AI')
+    
+    azure_deployment_name = get_env_var('AZURE_OPENAI_CHAT_DEPLOYMENT_NAME')
+    azure_endpoint = get_env_var('AZURE_OPENAI_ENDPOINT')
+    
+
+    # Set environment variables
+    if azure_api_key:
+        os.environ['AZURE_OPENAI_API_KEY'] = azure_api_key
+    if github_api_key:
+        os.environ['GITHUB_TOKEN_GEN_AI'] = github_api_key
+
+    # Check if we have the necessary API key
+    if not azure_api_key:
+        raise ValueError("AZURE_OPENAI_API_KEY is not set. Please check your environment variables, .env file, or secret files.")
+    
+    if not github_api_key:
+        raise ValueError("GITHUB_TOKEN_GEN_AI is not set. Please check your environment variables, .env file, or secret files.")
+
+    if not azure_endpoint:
+        raise ValueError("AZURE_OPENAI_ENDPOINT is not set. Please check your environment variables, .env file, or secret files.")
+
+    if azure_deployment_name != "AzureOpenAI":
         raise ValueError("This script is configured to use Azure OpenAI. Please check your .env file.")    
     
     azure_api_key = os.getenv('AZURE_OPENAI_API_KEY') or read_secret('AZURE_OPENAI_API_KEY')
@@ -253,8 +286,8 @@ async def setup_kernel():
     
     ai_service = AzureChatCompletion(
         service_id=service_id,
-        deployment_name=os.getenv('AZURE_OPENAI_CHAT_DEPLOYMENT_NAME'),
-        endpoint=os.getenv('AZURE_OPENAI_ENDPOINT'),
+        deployment_name=azure_deployment_name,
+        endpoint=azure_endpoint,
         api_key=azure_api_key
     )
     
