@@ -264,7 +264,9 @@ async def setup_kernel():
     if github_api_key:
         os.environ['GITHUB_TOKEN_GEN_AI'] = github_api_key
         
-    print(azure_deployment_name)
+    print("AZURE_OPENAI_CHAT_DEPLOYMENT_NAME: ",azure_deployment_name)
+    print("AZURE_OPENAI_API_KEY: ",azure_api_key)
+    print("GLOBAL_LLM_SERVICE:", azure_global_llm_service)
 
     # Check if we have the necessary API key
     if not azure_api_key:
@@ -279,7 +281,7 @@ async def setup_kernel():
     if azure_global_llm_service != "AzureOpenAI":
         raise ValueError("This script is configured to use Azure OpenAI. Please check your .env file: GLOBAL_LLM_SERVICE")    
     
-    print(azure_api_key)
+    
     service_id = "function_calling"
     
     ai_service = AzureChatCompletion(
