@@ -255,6 +255,7 @@ async def setup_kernel():
     
     azure_deployment_name = get_env_var('AZURE_OPENAI_CHAT_DEPLOYMENT_NAME')
     azure_endpoint = get_env_var('AZURE_OPENAI_ENDPOINT')
+    azure_global_llm_service = get_env_var('GLOBAL_LLM_SERVICE')
     
 
     # Set environment variables
@@ -262,6 +263,8 @@ async def setup_kernel():
         os.environ['AZURE_OPENAI_API_KEY'] = azure_api_key
     if github_api_key:
         os.environ['GITHUB_TOKEN_GEN_AI'] = github_api_key
+        
+    print(azure_deployment_name)
 
     # Check if we have the necessary API key
     if not azure_api_key:
@@ -273,14 +276,9 @@ async def setup_kernel():
     if not azure_endpoint:
         raise ValueError("AZURE_OPENAI_ENDPOINT is not set. Please check your environment variables, .env file, or secret files.")
 
-    if azure_deployment_name != "AzureOpenAI":
-        raise ValueError("This script is configured to use Azure OpenAI. Please check your .env file.")    
+    if azure_global_llm_service != "AzureOpenAI":
+        raise ValueError("This script is configured to use Azure OpenAI. Please check your .env file: GLOBAL_LLM_SERVICE")    
     
-    azure_api_key = os.getenv('AZURE_OPENAI_API_KEY') or read_secret('AZURE_OPENAI_API_KEY')
-    github_api_key = os.getenv('GITHUB_TOKEN_GEN_AI') or read_secret('GITHUB_TOKEN_GEN_AI')
-        
-    os.environ['AZURE_OPENAI_API_KEY'] = azure_api_key
-    os.environ['GITHUB_TOKEN_GEN_AI'] = github_api_key
     
     service_id = "function_calling"
     
@@ -304,10 +302,6 @@ def get_or_create_conversation(conversation_id: str):
 @app.on_event("startup")
 async def startup_event():
     global kernel
-    
-    if( (not os.getenv('AZURE_OPENAI_API_KEY')) or (not os.getenv('AZURE_OPENAI_API_KEY')) ):
-        load_dotenv()
-    
     kernel = await setup_kernel()
 
 @app.post("/demoprompt/{conversation_id}")
