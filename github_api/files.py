@@ -45,6 +45,7 @@ class GitHubFile:
 
         return make_github_request("PUT", url, self._get_headers(), data)
 
+    
     def create_directory(self, directory_path, branch="main"):
         return self.create_or_update_file(
             f"{directory_path}/.gitkeep",
@@ -67,3 +68,151 @@ class GitHubFile:
         if path:
             return [file for file in all_files if file.startswith(path)]
         return all_files
+    
+
+    def rename_file(self, old_path, new_path, commit_message=None, branch="main"):
+        """
+        Rename a file using the Git Trees API.
+        """
+        try:
+            # Get the latest commit SHA
+            branch_url = f"https://api.github.com/repos/{self.owner}/{self.repo}/branches/{branch}"
+            branch_data = make_github_request("GET", branch_url, self._get_headers())
+            latest_commit_sha = branch_data['commit']['sha']
+
+            # Get the tree of the latest commit
+            tree_url = f"https://api.github.com/repos/{self.owner}/{self.repo}/git/trees/{latest_commit_sha}?recursive=1"
+            tree_data = make_github_request("GET", tree_url, self._get_headers())
+
+            # Find the file to rename and prepare the new tree
+            file_to_rename = None
+            new_tree = []
+            for item in tree_data['tree']:
+                if item['path'] == old_path:
+                    file_to_rename = item
+                elif item['path'] != new_path:  # Exclude the new path if it already exists
+                    new_tree.append(item)
+
+            if file_to_rename is None:
+                return f"Error: File {old_path} not found in the repository"
+
+            # Add the renamed file to the new tree
+            new_tree.append({
+                "path": new_path,
+                "mode": file_to_rename['mode'],
+                "type": file_to_rename['type'],
+                "sha": file_to_rename['sha']
+            })
+
+            # Create a new tree
+            new_tree_url = f"https://api.github.com/repos/{self.owner}/{self.repo}/git/trees"
+            new_tree_data = {
+                "base_tree": latest_commit_sha,
+                "tree": new_tree
+            }
+            
+            new_tree_response = make_github_request("POST", new_tree_url, self._get_headers(), new_tree_data)
+
+            # Create a new commit
+            new_commit_url = f"https://api.github.com/repos/{self.owner}/{self.repo}/git/commits"
+            new_commit_data = {
+                "message": commit_message or f"Rename file from {old_path} to {new_path}",
+                "tree": new_tree_response['sha'],
+                "parents": [latest_commit_sha]
+            }
+            
+            new_commit_response = make_github_request("POST", new_commit_url, self._get_headers(), new_commit_data)
+
+            # Update the reference
+            ref_url = f"https://api.github.com/repos/{self.owner}/{self.repo}/git/refs/heads/{branch}"
+            ref_data = {
+                "sha": new_commit_response['sha']
+            }
+            make_github_request("PATCH", ref_url, self._get_headers(), ref_data)
+
+            return f"Successfully renamed file from {old_path} to {new_path}"
+
+        except Exception as e:
+            return f"An error occurred while renaming the file: {str(e)}"
+        
+    
+    
+    
+    def rename_directory(self, old_path, new_path, commit_message=None, branch="main"):
+        """
+        Rename a directory using the Git Trees API.
+
+        """
+        try:
+            
+            # Ensure old_path and new_path don't have trailing slashes
+            old_path = old_path.rstrip('/')
+            new_path = new_path.rstrip('/')
+
+            # Get the latest commit SHA
+            branch_url = f"https://api.github.com/repos/{self.owner}/{self.repo}/branches/{branch}"
+            branch_data = make_github_request("GET", branch_url, self._get_headers())
+            latest_commit_sha = branch_data['commit']['sha']
+
+            # Get the tree of the latest commit
+            tree_url = f"https://api.github.com/repos/{self.owner}/{self.repo}/git/trees/{latest_commit_sha}?recursive=1"
+            tree_data = make_github_request("GET", tree_url, self._get_headers())
+
+            # Prepare the new tree
+            new_tree = []
+            directory_renamed = False
+            for item in tree_data['tree']:
+                if item['path'].startswith(f"{old_path}/"):
+                    directory_renamed = True
+                    new_item_path = item['path'].replace(old_path, new_path, 1)
+                    new_tree.append({
+                        "path": new_item_path,
+                        "mode": item['mode'],
+                        "type": item['type'],
+                        "sha": item['sha']
+                    })
+                elif item['path'] != old_path and not item['path'].startswith(f"{new_path}/"):
+                    new_tree.append(item)
+
+            if not directory_renamed:
+                return f"Error: Directory {old_path} not found or is empty"
+
+            # Create a new tree
+            new_tree_url = f"https://api.github.com/repos/{self.owner}/{self.repo}/git/trees"
+            new_tree_data = {
+                "base_tree": latest_commit_sha,
+                "tree": new_tree
+            }
+            new_tree_response = make_github_request("POST", new_tree_url, self._get_headers(), new_tree_data)
+
+            # Create a new commit
+            new_commit_url = f"https://api.github.com/repos/{self.owner}/{self.repo}/git/commits"
+            new_commit_data = {
+                "message": commit_message or f"Rename directory from {old_path} to {new_path}",
+                "tree": new_tree_response['sha'],
+                "parents": [latest_commit_sha]
+            }
+            new_commit_response = make_github_request("POST", new_commit_url, self._get_headers(), new_commit_data)
+
+            # Update the reference
+            ref_url = f"https://api.github.com/repos/{self.owner}/{self.repo}/git/refs/heads/{branch}"
+            ref_data = {
+                "sha": new_commit_response['sha']
+            }
+            make_github_request("PATCH", ref_url, self._get_headers(), ref_data)
+
+            return f"Successfully renamed directory from {old_path} to {new_path}"
+
+        except Exception as e:
+            return f"An error occurred while renaming the directory: {str(e)}"
+        
+        
+    def delete_file(self, file_path, commit_message, sha):
+        url = f"{self.base_url}/{file_path}"
+        data = {
+            "message": commit_message,
+            "sha": sha
+        }
+        response = requests.delete(url, headers=self._get_headers(), json=data)
+        response.raise_for_status()
+        return response.json()

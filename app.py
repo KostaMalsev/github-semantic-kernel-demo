@@ -129,8 +129,8 @@ class GithubPlugin:
         self.github_actions = GitHubActions(repo_owner, repo_name)
         return self.github_actions.create_or_update_workflow(workflow_name, workflow_content)
 
-    @kernel_function(name="update_github_action", description="Update an existing GitHub Action workflow")
-    def update_github_action(self, 
+    @kernel_function(name="github_update_action", description="Update an existing GitHub Action workflow")
+    def github_update_action(self, 
                         repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                         workflow_name: Annotated[str, "workflow file name"],
@@ -156,15 +156,54 @@ class GithubPlugin:
         self.github_file = GitHubFile(repo_owner, repo_name)
         return self.github_file.create_or_update_file('README.md', file_content, "Update README.md")
 
-    @kernel_function(name="create_readme_file", description="Create new Readme in repo, use only for Readme files")
-    def create_readme_file(self, 
+    @kernel_function(name="github_create_readme_file", description="Create new Readme in repo, use only for Readme files")
+    def github_create_readme_file(self, 
                        repo_owner: Annotated[str, "repository owner"],
                         repo_name: Annotated[str, "repository name"],
                         file_content: Annotated[str, "full readme file content"],
                     ) -> Annotated[str, "The output is a string"]:
         self.github_file = GitHubFile(repo_owner, repo_name)
         return self.github_file.create_or_update_file('README.md', file_content, "Create README.md")
+    
+    @kernel_function(name="github_rename_file", description="Rename a file in github repo")
+    def github_rename_file(self, 
+                        repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                        old_path: Annotated[str, "current file path"],
+                        new_path: Annotated[str, "new file path"],
+                    ) -> Annotated[str, "The output is a string message indicating success or describing an error"]:
+        self.github_file = GitHubFile(repo_owner, repo_name)
+        return self.github_file.rename_file(old_path, new_path)
 
+    @kernel_function(name="github_rename_directory", description="Rename a directory in github repo")
+    def github_rename_directory(self, 
+                        repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                        old_path: Annotated[str, "current directory path"],
+                        new_path: Annotated[str, "new directory path"],
+                    ) -> Annotated[str, "The output is a string message indicating success or describing an error"]:
+        self.github_file = GitHubFile(repo_owner, repo_name)
+        return self.github_file.rename_directory(old_path, new_path)
+    
+    @kernel_function(name="github_delete_file", description="Delete a file from github repo")
+    def github_delete_file(self, 
+                        repo_owner: Annotated[str, "repository owner"],
+                        repo_name: Annotated[str, "repository name"],
+                        file_path: Annotated[str, "path of the file to delete"],
+                    ) -> Annotated[str, "The output is a string message indicating success or describing an error"]:
+        self.github_file = GitHubFile(repo_owner, repo_name)
+        try:
+            # First, get the file to retrieve its SHA
+            file_info = self.github_file.get_file(file_path)
+            
+            # Now delete the file
+            commit_message = f"Delete file {file_path}"
+            self.github_file.delete_file(file_path, commit_message, file_info['sha'])
+            
+            return f"Successfully deleted file: {file_path}"
+        except Exception as e:
+            return f"Error deleting file {file_path}: {str(e)}"
+        
     # The fetch utility functions:
     @kernel_function(name="github_get_html_content_from_url", description="Get html content from url")
     def github_get_html_content_from_url(self, url: Annotated[str, "The input url"]) -> Annotated[str, "The output is a string"]:
@@ -240,7 +279,6 @@ async def demo_prompt(conversation_id: str, request: PromptRequest):
 
     execution_settings = AzureChatPromptExecutionSettings(tool_choice="auto")
     execution_settings.function_choice_behavior = FunctionChoiceBehavior.Auto(auto_invoke=True, filters={})
-    #function_choice_behavior=FunctionChoiceBehavior.Auto(auto_invoke=True)
     
     result = (await chat_completion.get_chat_message_contents(
             chat_history=history,
