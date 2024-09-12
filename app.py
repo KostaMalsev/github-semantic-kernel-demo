@@ -250,12 +250,12 @@ async def setup_kernel():
         return value
 
     # Get API keys
-    azure_api_key = get_env_var('AZURE_OPENAI_API_KEY')
-    github_api_key = get_env_var('GITHUB_TOKEN_GEN_AI')
+    azure_api_key = get_env_var('AZURE_OPENAI_API_KEY').strip()
+    github_api_key = get_env_var('GITHUB_TOKEN_GEN_AI').strip()
     
-    azure_deployment_name = get_env_var('AZURE_OPENAI_CHAT_DEPLOYMENT_NAME')
-    azure_endpoint = get_env_var('AZURE_OPENAI_ENDPOINT')
-    azure_global_llm_service = get_env_var('GLOBAL_LLM_SERVICE')
+    azure_deployment_name = get_env_var('AZURE_OPENAI_CHAT_DEPLOYMENT_NAME').strip()
+    azure_endpoint = get_env_var('AZURE_OPENAI_ENDPOINT').strip()
+    azure_global_llm_service = get_env_var('GLOBAL_LLM_SERVICE').strip()
     
 
     # Set environment variables
