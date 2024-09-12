@@ -250,23 +250,25 @@ async def setup_kernel():
         return value
 
     # Get API keys
-    azure_api_key = get_env_var('AZURE_OPENAI_API_KEY').strip()
-    github_api_key = get_env_var('GITHUB_TOKEN_GEN_AI').strip()
+    azure_api_key = get_env_var('AZURE_OPENAI_API_KEY')
+    github_api_key = get_env_var('GITHUB_TOKEN_GEN_AI')
     
-    azure_deployment_name = get_env_var('AZURE_OPENAI_CHAT_DEPLOYMENT_NAME').strip()
-    azure_endpoint = get_env_var('AZURE_OPENAI_ENDPOINT').strip()
-    azure_global_llm_service = get_env_var('GLOBAL_LLM_SERVICE').strip()
+    azure_deployment_name = get_env_var('AZURE_OPENAI_CHAT_DEPLOYMENT_NAME')
+    azure_endpoint = get_env_var('AZURE_OPENAI_ENDPOINT')
+    azure_global_llm_service = get_env_var('GLOBAL_LLM_SERVICE')
     
 
+    print(f"AZURE_OPENAI_CHAT_DEPLOYMENT_NAME:{azure_deployment_name}*")
+    print(f"AZURE_OPENAI_API_KEY:{azure_api_key}*")
+    print(f"GLOBAL_LLM_SERVICE:{azure_global_llm_service}*")
+    
     # Set environment variables
     if azure_api_key:
         os.environ['AZURE_OPENAI_API_KEY'] = azure_api_key
     if github_api_key:
         os.environ['GITHUB_TOKEN_GEN_AI'] = github_api_key
         
-    print("AZURE_OPENAI_CHAT_DEPLOYMENT_NAME: ",azure_deployment_name)
-    print("AZURE_OPENAI_API_KEY:",azure_api_key,"*")
-    print("GLOBAL_LLM_SERVICE:",azure_global_llm_service,"*")
+    
 
     # Check if we have the necessary API key
     if not azure_api_key:
