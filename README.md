@@ -9,6 +9,7 @@ This repository demonstrates the usage of a semantic kernel for GitHub operation
 - [Files](#files)
 - [Kernel Functions](#kernel-functions)
 - [Docker Instructions](#docker-instructions)
+- [Demo](#demo)
 - [License](#license)
 
 ## Setup
@@ -128,6 +129,9 @@ The project uses the `docker-compose.yml` configuration to set up the applicatio
   - **Secrets:**
     - `AZURE_OPENAI_API_KEY` (from `./gen-api-key.txt`)
     - `GITHUB_TOKEN_GEN_AI` (from `./git-api-key.txt`)
+
+## Demo
+![Demo](repofixer-demo4.gif)
 
 ## License
 
